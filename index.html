@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>模型加载演示网址</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      background: antiquewhite;
+    }
+    canvas {
+      width: 300px;
+      height: 300px;
+      display: block;
+    }
+
+    .model-table {
+      /*background: #eacfad;*/
+      float: left;
+      margin: 10px;
+      border: black solid 1px;
+      padding: 5px;
+    }
+
+    .head {
+      text-align: center;
+      font-weight: bolder;
+    }
+  </style>
+</head>
+
+<table class="model-table">
+  <tr>
+    <td colspan="2" class="head">模型加载</td>
+  </tr>
+  <tr>
+    <td>
+      <label for="url">模型地址：<br>(末尾带'/')</label>
+    </td>
+    <td>
+      <textarea id="url" name="url" cols="50" rows="3">https://cdn.jsdelivr.net/gh/{用户名}/{仓库名}@{分支|标签名}/</textarea>
+    </td>
+  </tr>
+  <tr>
+    <td>示例：</td>
+    <td>
+      <div>
+        <button onclick="setUrl('https://cdn.jsdelivr.net/gh/letere-gzj/hugo-static-resource@main/live2d/live2d-moc3/model/阿库露_vts/')">阿库露_vts</button>
+        <button onclick="setUrl('https://cdn.jsdelivr.net/gh/letere-gzj/hugo-static-resource@main/live2d/live2d-moc3/model/符玄/')">符玄</button>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <button onclick="loadRemoteModel()">加载</button>
+    </td>
+  </tr>
+</table>
+
+<table class="model-table">
+  <tr>
+    <td colspan="2" class="head">
+      模型大小-位置调整
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for="scale">大小：</label>
+    </td>
+    <td>
+      <input id="scale" name="scale" size="5" type="text" value="1.0" onchange="reloadPosition()"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for="translateX">X轴偏移量：</label>
+    </td>
+    <td>
+      <input id="translateX" name="translateX" size="5" type="text" value="0" onchange="reloadPosition()"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label for="translateY">Y轴偏移量：</label>
+    </td>
+    <td>
+      <input id="translateY" name="translateX" size="5" type="text" value="0" onchange="reloadPosition()"/>
+    </td>
+  </tr>
+</table>
+<body>
+
+
+<script>
+  const config = {
+    // 资源路径
+    path: {
+      modelPath: "/Resources/",
+      cssPath: "/assets/waifu.css",
+      tipsJsonPath: "/assets/waifu-tips.json",
+      tipsJsPath: "/assets/waifu-tips.js",
+      live2dCorePath: "/Core/live2dcubismcore.js",
+      live2dSdkPath: "/assets/live2d-sdk.js"
+    },
+    // 工具栏
+    tools: ["hitokoto", "asteroids", "express", "switch-model", "switch-texture", "info", "quit"],
+    // 模型拖拽
+    drag: {
+      enable: true,
+      direction: ["x", "y"]
+    },
+    // 模型切换(order: 顺序切换，random: 随机切换)
+    switchType: "order"
+  }
+
+  // 加载资源并初始化
+  if (screen.width >= 768) {
+    Promise.all([
+      loadExternalResource(config.path.cssPath, "css"),
+      loadExternalResource(config.path.live2dCorePath, "js"),
+      loadExternalResource(config.path.live2dSdkPath, "js"),
+      loadExternalResource(config.path.tipsJsPath, "js")
+    ]).then(() => {
+      initWidget({
+        waifuPath: config.path.tipsJsonPath,
+        cdnPath: config.path.modelPath,
+        tools: config.tools,
+        dragEnable: config.drag.enable,
+        dragDirection: config.drag.direction,
+        switchType: config.switchType
+      });
+    });
+  }
+
+  // 异步加载资源
+  function loadExternalResource(url, type) {
+    return new Promise((resolve, reject) => {
+      let tag;
+      if (type === "css") {
+        tag = document.createElement("link");
+        tag.rel = "stylesheet";
+        tag.href = url;
+      }
+      else if (type === "js") {
+        tag = document.createElement("script");
+        tag.src = url;
+      }
+      if (tag) {
+        tag.onload = () => resolve(url);
+        tag.onerror = () => reject(url);
+        document.head.appendChild(tag);
+      }
+    });
+  }
+
+  function loadRemoteModel() {
+    let element = document.querySelector("#url");
+    loadModel(element.value)
+  }
+
+  function reloadPosition() {
+    const scale = document.querySelector("#scale").value;
+    const translateX = document.querySelector("#translateX").value;
+    const translateY = document.querySelector("#translateY").value;
+    window.live2d.setPosition(scale, translateX, translateY)
+  }
+
+  function setUrl(url) {
+    let urlEle = document.querySelector("#url");
+    urlEle.value = url;
+  }
+</script>
+</body>
+</html>
